@@ -7,6 +7,15 @@ const handleCastErrorDB = (err) => {
   return new AppError(message, 400);
 };
 
+const handleDuplicateFieldsDB = (err) => {
+  // To find text between quotes
+  const regex = /"([^"]*)"/g;
+  const value = err.errmsg.match(regex);
+
+  const message = `Duplicate field value: ${value}. Please use another value!`;
+  return new AppError(message, 400);
+};
+
 const sendErrorDev = (err, res) => {
   res.status(err.statusCode).json({
     status: err.status,
@@ -48,12 +57,13 @@ module.exports = (err, req, res, next) => {
     let error = Object.create(err);
 
     // 1st method
-    if (error.name === 'CastError') error = handleCastErrorDB(error);
-
-    // 2nd method
     // if (err instanceof mongoose.Error.CastError) {
     //   error = handleCastErrorDB(err);
     // }
+
+    // 2nd method
+    if (error.name === 'CastError') error = handleCastErrorDB(error);
+    if (error.code === 11000) error = handleDuplicateFieldsDB(error);
 
     sendErrorProd(error, res);
   }
