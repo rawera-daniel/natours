@@ -111,6 +111,17 @@ const tourSchema = new mongoose.Schema(
   },
 );
 
+tourSchema.virtual('durationWeeks').get(function () {
+  return this.duration / 7;
+});
+
+// Virtual populate
+tourSchema.virtual('reviews', {
+  ref: 'Review',
+  foreignField: 'tour',
+  localField: '_id',
+});
+
 // Document middleware: run before .save() & .create()
 tourSchema.pre('save', function (next) {
   this.slug = slugify(this.name, { lower: true });
@@ -163,10 +174,6 @@ tourSchema.pre('aggregate', function (next) {
   console.log(this.pipeline());
 
   next();
-});
-
-tourSchema.virtual('durationWeeks').get(function () {
-  return this.duration / 7;
 });
 
 const Tour = mongoose.model('Tour', tourSchema);
